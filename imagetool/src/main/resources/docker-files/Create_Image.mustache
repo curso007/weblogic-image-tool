@@ -145,16 +145,15 @@ RUN {{{oracle_home}}}/OPatch/opatch napply -silent -oh {{{oracle_home}}} -phBase
         DOMAIN_HOME={{{domain_home}}}
 
     COPY --chown={{userid}}:{{groupid}} {{{wdtInstaller}}} {{{tempDir}}}/
-
+    USER root
     RUN mkdir -p {{{wdt_home}}} \
     && chown {{userid}}:{{groupid}} {{{wdt_home}}}
 
+    RUN mkdir -p {{{wdt_model_home}}} \
+    && mkdir -p $(dirname {{{domain_home}}}) \
+    && chown -R {{userid}}:{{groupid}} $(dirname {{{domain_home}}})
+
     USER {{userid}}
-
-    RUN cd {{{wdt_home}}} \
-    && mkdir -p {{{wdt_model_home}}} \
-    && mkdir -p $(dirname {{{domain_home}}})
-
     {{#wdtModels}}
         COPY --chown={{userid}}:{{groupid}} {{{.}}} {{{wdt_model_home}}}/
     {{/wdtModels}}

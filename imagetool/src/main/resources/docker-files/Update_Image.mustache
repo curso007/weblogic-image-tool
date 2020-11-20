@@ -21,8 +21,6 @@
     RUN mkdir -p {{{wdt_home}}} \
     && chown {{userid}}:{{groupid}} {{{wdt_home}}}
 
-    USER {{userid}}
-
     RUN cd {{{wdt_home}}} \
     && mkdir -p {{{wdt_model_home}}} \
     && mkdir -p $(dirname {{{domain_home}}})
@@ -42,6 +40,8 @@
     {{#beforeWdtCommand}}
         {{{.}}}
     {{/beforeWdtCommand}}
+
+    USER {{userid}}
 
     RUN cd {{{wdt_home}}} \
     && jar xf {{{tempDir}}}/{{{wdtInstaller}}}
@@ -116,19 +116,27 @@ USER {{userid}}
 {{/isPatchingEnabled}}
 
 {{#isWdtEnabled}}
+
+    USER root
+    RUN DOMAIN_PARENT=$(dirname {{{domain_home}}}) \
+    && mkdir -p $DOMAIN_PARENT \
+    && chown {{userid}}:{{groupid}} $DOMAIN_PARENT \
+    && chmod g+w $DOMAIN_PARENT
+
     {{#modelOnly}}
-        RUN DOMAIN_PARENT=$(dirname {{{domain_home}}}) \
-        && mkdir -p $DOMAIN_PARENT \
-        && chown {{userid}}:{{groupid}} $DOMAIN_PARENT \
-        && chmod g+w $DOMAIN_PARENT \
-        && mkdir -p {{{wdt_model_home}}} \
+
+        RUN mkdir -p {{{wdt_model_home}}} \
         && chmod g+w {{{wdt_model_home}}}
+
+        USER {{userid}}
+
         COPY --from=WDT_BUILD --chown={{userid}}:{{groupid}} {{wdt_home}} {{wdt_home}}/
         {{#isWdtModelHomeOutsideWdtHome}}
             COPY --from=WDT_BUILD --chown={{userid}}:{{groupid}} {{wdt_model_home}} {{wdt_model_home}}/
         {{/isWdtModelHomeOutsideWdtHome}}
     {{/modelOnly}}
     {{^modelOnly}}
+        USER {{userid}}
         COPY --from=WDT_BUILD --chown={{userid}}:{{groupid}} {{{domain_home}}} {{{domain_home}}}/
         RUN chmod g+w {{{domain_home}}}
     {{/modelOnly}}
